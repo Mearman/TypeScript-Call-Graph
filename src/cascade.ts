@@ -1,6 +1,6 @@
 interface NodeForGraphing {
-  id: string,
-  parents: string[],
+    id: string,
+    parents: string[],
 }
 
 // Some globals
@@ -13,19 +13,19 @@ let calledAlready = []; // to keep track of what has been called; prevent reculs
  * @param parent
  */
 function generateFromOneParent(parent: string): NodeForGraphing[] {
-  const newElements = [];
+    const newElements = [];
 
-  if (myMap.has(parent)) {
-    const children =  myMap.get(parent);
+    if (myMap.has(parent)) {
+        const children = myMap.get(parent);
 
-    children.forEach((element) => {
-      if (!calledAlready.includes(element)) { // PREVENT RECURSION !
-        newElements.push({ id: element, parents: [parent] });
-      }
-    });
-  }
+        children.forEach((element) => {
+            if (!calledAlready.includes(element)) { // PREVENT RECURSION !
+                newElements.push({ id: element, parents: [parent] });
+            }
+        });
+    }
 
-  return newElements;
+    return newElements;
 }
 
 /**
@@ -35,35 +35,35 @@ function generateFromOneParent(parent: string): NodeForGraphing[] {
  */
 function generateNextLevel(parents: string[], stackDepth: number): void {
 
-  calledAlready.push(...parents);
+    calledAlready.push(...parents);
 
-  if (stackDepth === 0) {
-    return;
-  }
-
-  // Generate the NodeForGraphing[] for this 'level'
-  let thisLevel = [];
-
-  parents.forEach(parent => {
-    thisLevel.push(...generateFromOneParent(parent));
-  });
-
-  if (thisLevel.length) {
-    final.push([...thisLevel]);
-  }
-
-  // start building the next `level`
-  let nextLevel = [];
-
-  parents.forEach(parent => {
-    if (myMap.has(parent)) {
-      nextLevel.push(...myMap.get(parent));
+    if (stackDepth === 0) {
+        return;
     }
-  });
 
-  if (nextLevel.length) {
-    generateNextLevel(nextLevel, stackDepth - 1);
-  }
+    // Generate the NodeForGraphing[] for this 'level'
+    let thisLevel = [];
+
+    parents.forEach(parent => {
+        thisLevel.push(...generateFromOneParent(parent));
+    });
+
+    if (thisLevel.length) {
+        final.push([...thisLevel]);
+    }
+
+    // start building the next `level`
+    let nextLevel = [];
+
+    parents.forEach(parent => {
+        if (myMap.has(parent)) {
+            nextLevel.push(...myMap.get(parent));
+        }
+    });
+
+    if (nextLevel.length) {
+        generateNextLevel(nextLevel, stackDepth - 1);
+    }
 }
 
 /**
@@ -72,14 +72,14 @@ function generateNextLevel(parents: string[], stackDepth: number): void {
  * @param startFunction -- string of the function name we want to use as start of call graph
  */
 export function convertForCascade(calledFunctions: Map<string, string[]>, startFunction: string) {
-  myMap = calledFunctions;
-  final = [];
-  calledAlready = [];
+    myMap = calledFunctions;
+    final = [];
+    calledAlready = [];
 
-  // 1st case -- handle manually
-  final.push([{ id: startFunction }]);
-  // all next cases generate automatically
-  generateNextLevel([startFunction], 10);
+    // 1st case -- handle manually
+    final.push([{ id: startFunction }]);
+    // all next cases generate automatically
+    generateNextLevel([startFunction], 10);
 
-  return final;
+    return final;
 }

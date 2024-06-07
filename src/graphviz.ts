@@ -2,21 +2,21 @@ import * as graphviz from 'graphviz';
 
 export function convertForGraphViz(functionMap: Map<string, string[]>) {
 
-  const g = graphviz.digraph("G");
+    const g = graphviz.digraph("G");
 
-  g.set("rankdir", "LR");
+    g.set("rankdir", "LR");
 
-  functionMap.forEach((value, key) => {
-    g.addNode(key);
-  });
-
-  functionMap.forEach((childArr, key) => {
-    childArr.forEach((child) => {
-      g.addEdge(key, child);
+    functionMap.forEach((value, key) => {
+        g.addNode(key);
     });
-  });
 
-  return g.to_dot();
+    functionMap.forEach((childArr, key) => {
+        childArr.forEach((child) => {
+            g.addEdge(key, child);
+        });
+    });
+
+    return g.to_dot();
 }
 
 
