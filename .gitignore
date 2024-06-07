@@ -1,2 +1,4 @@
 node_modules
 graphing/temp.png
+package-lock.json
+.env

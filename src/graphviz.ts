@@ -1,4 +1,4 @@
-const graphviz = require('graphviz');
+import * as graphviz from 'graphviz';
 
 export function convertForGraphViz(functionMap: Map<string, string[]>) {
 

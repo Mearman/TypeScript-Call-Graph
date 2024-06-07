@@ -1,5 +1,5 @@
 import * as ts from "typescript";
-const fs = require('fs');
+import * as fs from 'fs';
 
 const { green, red } = require('kleur');
 
@@ -9,6 +9,12 @@ const allFunctions: string[] = [];
 const calledFunctions: Map<string, string[]> = new Map();
 
 let currentFunction = undefined; // to keep track of which function we are inside
+
+function createProgram(tsconfigPath: string){
+  
+
+
+}
 
 // =================================================================================================
 
@@ -26,6 +32,7 @@ function extractFunctionCalls(node: ts.Node, sourceFile: ts.SourceFile, indentLe
 
   // e.g `function hello()`
   if (ts.isFunctionDeclaration(node)) {
+
     node.forEachChild(child => {
       if (ts.isIdentifier(child)) {
         const declaredFunction: string = child.getText(sourceFile);
@@ -156,9 +163,10 @@ export function processFiles(filenames: string[]) {
     calledFunctions.set(key, value.filter((calledFunc: string) => {
       return allFunctions.includes(calledFunc);
     }));
+    /*
     if (!calledFunctions.get(key).length) {
       calledFunctions.delete(key);
-    }
+    }*/
   });
 
   console.log(calledFunctions);
