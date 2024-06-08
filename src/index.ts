@@ -5,13 +5,13 @@ import * as express from 'express';
 import { config } from 'dotenv';
 import { globSync } from 'glob';
 
-import { processFiles } from './extract';
 import { convertForArc } from './arc';
 import { convertForCascade } from './cascade';
 import { convertForGraphViz } from './graphviz';
 import { convertForMermaid } from './mermaid';
 import { showHelpMessage, showServerRunning } from './helper';
 import * as path from 'path';
+import { analyzeFiles } from './analyze';
 
 // Load environment variables from .env file
 // (namely SRC_PATHS, which is a directory containing .ts files to process)
@@ -70,8 +70,11 @@ const sourceFiles = loadSourceFiles();
 
 if (sourceFiles.length) {
     console.log(sourceFiles);
-    const functions = processFiles(sourceFiles);
-    startServer(functions.all, functions.called);
+    // TODO: Handle cases where TS_CONFIG_PATH is not defined
+    analyzeFiles(sourceFiles, process.env.TS_CONFIG_PATH!)
+    // TODO: Uncomment these out later
+    // const functions = processFiles(sourceFiles);
+    // startServer(functions.all, functions.called);
 } else {
     showHelpMessage();
 }

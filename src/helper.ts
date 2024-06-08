@@ -23,7 +23,7 @@ export function showHelpMessage(): void {
  * Console log that server is running
  * @param filePath
  */
-export function showServerRunning(filePath): void {
+export function showServerRunning(filePath: string): void {
     // Helpful message
     console.log(green('╭───────────────────────────╮'));
     console.log(green('│      ') + 'Graph visible @ ' + green('     │'));

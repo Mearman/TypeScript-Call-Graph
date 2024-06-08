@@ -13,5 +13,17 @@
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Jest Tests",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "test"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        }
     ]
 }

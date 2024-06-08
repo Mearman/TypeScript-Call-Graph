@@ -1,8 +1,28 @@
 {
-  "exclude": [
-    "node_modules"
-  ],
-  "compilerOptions": {
-    "outDir": "./bin"
-  }
+    "exclude": [
+        "node_modules",
+        "static"
+    ],
+    "compilerOptions": {
+        "outDir": "./bin",
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "src/*",
+                "tests/*"
+            ]
+        },
+        /* Linting */
+        "strict": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "noFallthroughCasesInSwitch": true,
+        /* Rules */
+        "allowJs": false,
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "exactOptionalPropertyTypes": true,
+        "traceResolution": true,
+        "sourceMap": true
+    },
 }

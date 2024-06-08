@@ -4,7 +4,5 @@
     "editor.detectIndentation": false,
     "[javascript][javascriptreact][typescript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features",
-    },
-    "editor.wordWrap": "bounded",
-    "editor.wordWrapColumn": 100
+    }
 }
