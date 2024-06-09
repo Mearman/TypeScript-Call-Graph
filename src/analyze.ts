@@ -1,4 +1,4 @@
-import * as ts from "typescript";
+import ts from "typescript";
 
 
 /** Here, modules represent any of the following units of code:
@@ -34,21 +34,20 @@ type NamedDeclaration = ts.Declaration & { name?: ts.PropertyName };
 
 // brand types for nodes
 type NodeId = string & { __nodeId: true }
-type NamedDeclarationId = NodeId & {__namedDeclarationId: true}
+type NamedDeclarationId = NodeId & { __namedDeclarationId: true }
 
-function getNodeId(node: ts.Node, fileName?: string): NodeId{
-    if(!fileName)
+function getNodeId(node: ts.Node, fileName?: string): NodeId {
+    if (!fileName)
         fileName = node.getSourceFile().fileName;
-    const {pos, end} = node;
+    const { pos, end } = node;
     return `${fileName}:${pos}:${end}` as NodeId;
 }
 
-function getNamedDeclarationId(node: NamedDeclaration, fileName?: string): NamedDeclarationId{
+function getNamedDeclarationId(node: NamedDeclaration, fileName?: string): NamedDeclarationId {
     return getNodeId(node, fileName) as NamedDeclarationId;
 }
 
-// Someone double check this pls 
-function isLValue(node: ts.Node) {
+function isAssignee(node: ts.Node) {
     while (true) {
         const parent = node.parent;
         if (ts.isBinaryExpression(parent)
@@ -235,7 +234,7 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
 
         // calling getters and setters
         if (ts.isPropertyAccessExpression(node)) {
-            const nodeIsLValue = isLValue(node);
+            const nodeIsLValue = isAssignee(node);
             for (const declaration of getDeclarations(node.name)) {
                 let module: Module | null;
                 if ((module = declarationToModule.get(getNamedDeclarationId(declaration)) || null)

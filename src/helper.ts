@@ -1,4 +1,5 @@
-const { green, bold } = require('kleur');
+import kleur from 'kleur';
+const { green, bold } = kleur;
 
 /**
  * Shown when user runs `tcg` without arguments
@@ -6,7 +7,7 @@ const { green, bold } = require('kleur');
 export function showHelpMessage(): void {
     console.log(green('╭───────────────────────────╮'));
     console.log(green('│                           │'));
-    console.log(green('│   ') + bold('Typescript Call Graph') + green('   │'));
+    console.log(green('│   ') + 'Typescript Call Graph' + green('   │'));
     console.log(green('│                           │'));
     console.log(green('╰───────────────────────────╯'));
 

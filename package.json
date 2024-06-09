@@ -18,7 +18,7 @@
         "url": "https://github.com/blake1821/TypeScript-Call-Graph.git"
     },
     "scripts": {
-        "start": "ts-node src/index.ts",
+        "start": "node --experimental-specifier-resolution=node --loader ts-node/esm ./src/index.ts",
         "test": "jest"
     },
     "dependencies": {

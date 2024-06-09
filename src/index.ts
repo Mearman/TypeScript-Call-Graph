@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-import {openApp} from 'open';
+import open from 'open';
 import express from 'express';
 import { config } from 'dotenv';
 import { globSync } from 'glob';
 
-import { convertForArc } from './arc.js';
-import { convertForCascade } from './cascade.js';
+// import { convertForArc } from './arc.js';
+//import { convertForCascade } from './cascade.js';
 import { convertForGraphViz } from './graphviz.js';
-import { convertForMermaid } from './mermaid.js';
+// import { convertForMermaid } from './mermaid.js';
 import { showHelpMessage, showServerRunning } from './helper.js';
 import * as path from 'path';
-import { analyzeFiles } from './analyze.js';
+import { AnalysisResult, analyzeFiles } from './analyze.js';
 
 // Load environment variables from .env file
 // (namely SRC_PATHS, which is a directory containing .ts files to process)
@@ -37,7 +37,7 @@ function loadSourceFiles(): string[] {
 /**
  * Start Express server with static files and API endpoints
  */
-function startServer(allFunctions: string[], functionMap: Map<string, string[]>): void {
+function startServer(analysisResult: AnalysisResult): void {
 
     const app = express();
 
@@ -49,32 +49,29 @@ function startServer(allFunctions: string[], functionMap: Map<string, string[]>)
     });
 
     // API endpoints
-    app.use('/all', function (req, res) { res.json(allFunctions) });
-    app.get('/arcAPI', function (req, res) { res.json(convertForArc(allFunctions, functionMap)) });
-    app.get('/cascadeAPI/:startFunc', function (req, res) {
-        res.json(convertForCascade(functionMap, req.params.startFunc))
-    });
-    app.get('/graphvizAPI', function (req, res) { res.json(convertForGraphViz(functionMap)) });
-    app.get('/mermaidAPI', function (req, res) { res.json(convertForMermaid(functionMap)) });
+    app.use('/all', function (req, res) { res.json(analysisResult) });
+    //app.get('/arcAPI', function (req, res) { res.json(convertForArc(analysisResult)) });
+    /*app.get('/cascadeAPI/:startFunc', function (req, res) {
+        res.json(convertForCascade(analysisResult))
+    });*/
+    app.get('/graphvizAPI', function (req, res) { res.json(convertForGraphViz(analysisResult)) });
+    //app.get('/mermaidAPI', function (req, res) { res.json(convertForMermaid(functionMap)) });
 
     app.listen(3000);
 
     const filePath: string = 'http://localhost:3000';
 
     showServerRunning(filePath);
-    openApp(filePath);
+    open(filePath);
 }
 
 
 const sourceFiles = loadSourceFiles();
 
 if (sourceFiles.length) {
-    console.log(sourceFiles);
     // TODO: Handle cases where TS_CONFIG_PATH is not defined
-    analyzeFiles(sourceFiles, process.env.TS_CONFIG_PATH!)
-    // TODO: Uncomment these out later
-    // const functions = processFiles(sourceFiles);
-    // startServer(functions.all, functions.called);
+    const analysisResult = analyzeFiles(sourceFiles, process.env.TS_CONFIG_PATH!)
+    startServer(analysisResult);
 } else {
     showHelpMessage();
 }
