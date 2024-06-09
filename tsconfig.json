@@ -4,6 +4,10 @@
         "static"
     ],
     "compilerOptions": {
+        "target": "ESNext",
+        "moduleResolution": "NodeNext",
+        "esModuleInterop": true,
+        "module": "NodeNext",
         "outDir": "./bin",
         "baseUrl": ".",
         "paths": {
@@ -23,6 +27,6 @@
         "noImplicitOverride": true,
         "exactOptionalPropertyTypes": true,
         "traceResolution": true,
-        "sourceMap": true
+        "sourceMap": true,
     },
 }

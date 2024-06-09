@@ -1,3 +1,7 @@
 {
-    "compilerOptions": {}
+    "compilerOptions": {
+        "target": "ESNext",
+        "moduleResolution": "NodeNext",
+        "module": "NodeNext"
+    }
 }

@@ -4,5 +4,11 @@
     "editor.detectIndentation": false,
     "[javascript][javascriptreact][typescript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features",
-    }
+    },
+    "jest.outputConfig": {
+        "revealOn": "run",
+        "revealWithFocus": "none",
+        "clearOnRun": "none",
+    },
+    "jest.runMode": "on-demand"
 }

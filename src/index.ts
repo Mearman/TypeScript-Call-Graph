@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-import * as open from 'open';
-import * as express from 'express';
+import {openApp} from 'open';
+import express from 'express';
 import { config } from 'dotenv';
 import { globSync } from 'glob';
 
-import { convertForArc } from './arc';
-import { convertForCascade } from './cascade';
-import { convertForGraphViz } from './graphviz';
-import { convertForMermaid } from './mermaid';
-import { showHelpMessage, showServerRunning } from './helper';
+import { convertForArc } from './arc.js';
+import { convertForCascade } from './cascade.js';
+import { convertForGraphViz } from './graphviz.js';
+import { convertForMermaid } from './mermaid.js';
+import { showHelpMessage, showServerRunning } from './helper.js';
 import * as path from 'path';
-import { analyzeFiles } from './analyze';
+import { analyzeFiles } from './analyze.js';
 
 // Load environment variables from .env file
 // (namely SRC_PATHS, which is a directory containing .ts files to process)
@@ -62,7 +62,7 @@ function startServer(allFunctions: string[], functionMap: Map<string, string[]>)
     const filePath: string = 'http://localhost:3000';
 
     showServerRunning(filePath);
-    open(filePath);
+    openApp(filePath);
 }
 
 

@@ -1,4 +1,4 @@
-import { analyzeFiles } from '@/analyze';
+import { analyzeFiles } from '@/analyze.js';
 import { describe, expect, test } from '@jest/globals';
 import * as path from 'path';
 
@@ -37,6 +37,37 @@ describe('analyzeFiles', () => {
         const [_, b] = exportFile.children;
 
         expect(importFile.calledModules).toContain(b.id);
+    });
 
+    test('can resolve methods in classes', () => {
+        const { rootModules, moduleMap } = analyzeFiles([testFile('04-methods.ts')], testFile('tsconfig.json'));
+        const file = rootModules[0];
+        const dogClass = file.children[0];
+        expect(dogClass.name).toEqual('Dog');
+        const [constructor, static_, bark, getX, setX] = dogClass.children;
+
+        expect(constructor.type).toEqual('constructor');
+        expect(static_.type).toEqual('static');
+        expect(bark.type).toEqual('method');
+        expect(getX.type).toEqual('getter');
+        expect(setX.type).toEqual('setter');
+
+        expect(file.calledModules).toEqual([
+            constructor.id,
+            getX.id,
+            bark.id,
+            setX.id
+        ]);
+    });
+
+    test('anonymous functions, assignment, and parenthesis', ()=>{
+        const { rootModules, moduleMap } = analyzeFiles([testFile('05-anonymous.ts')], testFile('tsconfig.json'));
+        const file = rootModules[0];
+        const x = file.children[0];
+        const y = file.children[1];
+
+        expect(file.calledModules).toContain(x.id);
+        expect(file.calledModules).toContain(y.id);
+        
     });
 })

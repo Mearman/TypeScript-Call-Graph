@@ -17,7 +17,7 @@ export type Module = {
     type: ModuleType,
     name?: string
 }
-export type ModuleType = 'file' | 'fn' | 'method' | 'class' | 'constructor' | 'getter' | 'setter' | 'static';
+export type ModuleType = 'file' | 'fn' | 'class' | 'constructor' | 'getter' | 'setter' | 'method' | 'static';
 export type ModuleId = string & { __moduleId: true };
 export type AnalysisResult = {
     rootModules: Module[],
@@ -29,7 +29,40 @@ function createModuleId() {
     return (nextModuleId++).toString() as ModuleId;
 }
 
+
 type NamedDeclaration = ts.Declaration & { name?: ts.PropertyName };
+
+// brand types for nodes
+type NodeId = string & { __nodeId: true }
+type NamedDeclarationId = NodeId & {__namedDeclarationId: true}
+
+function getNodeId(node: ts.Node, fileName?: string): NodeId{
+    if(!fileName)
+        fileName = node.getSourceFile().fileName;
+    const {pos, end} = node;
+    return `${fileName}:${pos}:${end}` as NodeId;
+}
+
+function getNamedDeclarationId(node: NamedDeclaration, fileName?: string): NamedDeclarationId{
+    return getNodeId(node, fileName) as NamedDeclarationId;
+}
+
+// Someone double check this pls 
+function isLValue(node: ts.Node) {
+    while (true) {
+        const parent = node.parent;
+        if (ts.isBinaryExpression(parent)
+            && parent.operatorToken.kind == ts.SyntaxKind.EqualsToken
+            && node == parent.left) {
+            return true;
+        }
+        if (ts.isArrayLiteralExpression(parent)) {
+            node = parent;
+            continue;
+        }
+        return false;
+    }
+}
 
 export function analyzeFiles(filenames: string[], tsConfigSrc: string): AnalysisResult {
     const { config } = ts.parseConfigFileTextToJson(tsConfigSrc, ts.sys.readFile(tsConfigSrc)!);
@@ -42,8 +75,9 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
 
     // maps for bookkeeping
     const moduleMap = new Map<ModuleId, Module>();
-    const nodeToModule = new Map<ts.Node, Module>();
-    const declarationToModule = new Map<NamedDeclaration, ModuleId>();
+    const nodeToModule = new Map<NodeId, Module>();
+    const declarationToModule = new Map<NamedDeclarationId, Module>();
+    const constructorMap = new Map<ModuleId, Module>(); // class -> constructor
 
     // See if the expression is being assigned to a variable, or is a property of an object
     // Used for arrow functions, etc.
@@ -85,6 +119,15 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
         return symbol;
     }
 
+    // Generator for a node's declarations
+    function* getDeclarations(node: ts.Node): Generator<ts.Declaration> {
+        const calledSymbol = typeChecker.getSymbolAtLocation(node) || null;
+        const originalSymbol = calledSymbol && followSymbol(calledSymbol);
+        for (let declaration of originalSymbol?.getDeclarations() || []) {
+            yield declaration;
+        }
+    }
+
     /** First pass:
      - create modules for each applicable node
      - store them in a map
@@ -94,16 +137,17 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
      @returns the module for the given node, if it is a module node,
         or an array of child modules if the node is not a module node
      */
-    function visit1(node: ts.Node) {
+    function visit1(node: ts.Node, fileName: string) {
 
         // if this node is a module, initialize the module object:
         let module: Module | null = null as Module | null;
         function initModule(type: ModuleType, declaration: NamedDeclaration | null, nameOverride?: string) {
             const declarationNameNode = declaration?.name;
             const name = nameOverride || declarationNameNode?.getText();
-            const id = createModuleId();
+            const moduleId = createModuleId();
+            const nodeId = getNodeId(node, fileName);
             module = {
-                id,
+                id: moduleId,
                 type,
                 children: [],
                 calledModules: [],
@@ -111,14 +155,25 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
                 ... (name && { name })
             }
 
-            nodeToModule.set(node, module);
-            moduleMap.set(id, module);
+            nodeToModule.set(nodeId, module);
+            moduleMap.set(moduleId, module);
+
             if (declaration)
-                declarationToModule.set(declaration, id);
+                declarationToModule.set(getNamedDeclarationId(declaration, fileName), module);
+
+            if (type == 'constructor') {
+                if (ts.isClassDeclaration(node.parent)) {
+                    const classModule = nodeToModule.get(getNodeId(node.parent, fileName));
+                    if (classModule) {
+                        constructorMap.set(classModule.id, module);
+                    }
+
+                }
+            }
         };
 
         if (ts.isMethodDeclaration(node)) { initModule('method', node) }
-        if (ts.isClassStaticBlockDeclaration(node)) { initModule('fn', null) }
+        if (ts.isClassStaticBlockDeclaration(node)) { initModule('static', null) }
         if (ts.isConstructorDeclaration(node)) { initModule('constructor', node) }
         if (ts.isGetAccessorDeclaration(node)) { initModule('getter', node) }
         if (ts.isSetAccessorDeclaration(node)) { initModule('setter', node) }
@@ -132,7 +187,7 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
         // recursively append child modules
         const children: Module[] = [];
         node.forEachChild(child => {
-            const childResult = visit1(child);
+            const childResult = visit1(child, fileName);
             if (childResult instanceof Array) {
                 const childModules = childResult;
                 children.push(...childModules);
@@ -163,29 +218,56 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
      * ```
      * When the node for 'a' is visited, only the module id for 'd' should be returned.
      */
-    function visit2(node: ts.Node): ModuleId[] {
+    function visit2(node: ts.Node, fileName: string): ModuleId[] {
         const calledModules: ModuleId[] = [];
 
 
         // if the visited node is a function call, find the module it's calling
-        if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
-            const calledSymbol = typeChecker.getSymbolAtLocation(node.expression) || null;
-            const originalSymbol = calledSymbol && followSymbol(calledSymbol);
-            for (let declaration of originalSymbol?.getDeclarations() || []) {
-                let moduleId: ModuleId | null;
-                if (moduleId = declarationToModule.get(declaration) || null) {
-                    calledModules.push(moduleId);
+        if (ts.isCallExpression(node)) {
+            for (const declaration of getDeclarations(node.expression)) {
+                let module: Module | null;
+                if (module = declarationToModule.get(getNamedDeclarationId(declaration)) || null) {
+                    calledModules.push(module.id);
+                    break;
+                }
+            }
+        }
+
+        // calling getters and setters
+        if (ts.isPropertyAccessExpression(node)) {
+            const nodeIsLValue = isLValue(node);
+            for (const declaration of getDeclarations(node.name)) {
+                let module: Module | null;
+                if ((module = declarationToModule.get(getNamedDeclarationId(declaration)) || null)
+                    && (module.type == 'getter' && !nodeIsLValue
+                        || module.type == 'setter' && nodeIsLValue)
+                ) {
+                    calledModules.push(module.id);
+                    break;
+                }
+            }
+        }
+
+        // constructor
+        if (ts.isNewExpression(node)) {
+            for (const declaration of getDeclarations(node.expression)) {
+                let classModule: Module | undefined;
+                if (classModule = declarationToModule.get(getNamedDeclarationId(declaration))) {
+                    let constructorModule: Module | undefined;
+                    if (constructorModule = constructorMap.get(classModule.id)) {
+                        calledModules.push(constructorModule.id);
+                    }
                     break;
                 }
             }
         }
 
         node.forEachChild(child => {
-            const childCallees = visit2(child);
+            const childCallees = visit2(child, fileName);
             calledModules.push(...childCallees);
         });
 
-        let module = nodeToModule.get(node);
+        let module = nodeToModule.get(getNodeId(node, fileName));
         if (module) {
             module.calledModules = calledModules;
             return [];
@@ -198,14 +280,14 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
     // Run first pass
     program.getSourceFiles().forEach(sourceFile => {
         if (sourceFile.fileName.includes('node_modules')) return;
-        visit1(sourceFile);
+        visit1(sourceFile, sourceFile.fileName);
     });
 
     // Run second pass
     const rootModules = program.getSourceFiles().flatMap(sourceFile => {
         if (sourceFile.fileName.includes('node_modules')) return [];
-        visit2(sourceFile);
-        return [nodeToModule.get(sourceFile)!];
+        visit2(sourceFile, sourceFile.fileName);
+        return [nodeToModule.get(getNodeId(sourceFile, sourceFile.fileName))!];
     });
 
     return {

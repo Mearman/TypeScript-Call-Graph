@@ -1,3 +1,3 @@
-import {b} from './02-property-resolution';
+import {b} from './02-property-resolution.js';
 
 b();
