@@ -11,13 +11,7 @@ export function showHelpMessage(): void {
     console.log(green('│                           │'));
     console.log(green('╰───────────────────────────╯'));
 
-    console.log('Please provide a list of input files and/or folders');
-    console.log('e.g. `'
-        + green('myFile.ts') + '`, `'
-        + green('*') + '`, `'
-        + green('**/*') + '`, `'
-        + green('myFolder/*') + '`');
-    console.log('or any combination of the above, like `' + green('myFile.ts myFolder/*') + '`');
+    console.log('Please specify a TS_CONFIG_PATH and SRC_PATHS environment variable');
 }
 
 /**

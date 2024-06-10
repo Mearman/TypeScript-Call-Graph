@@ -5,7 +5,7 @@
     ],
     "compilerOptions": {
         "target": "ESNext",
-        "moduleResolution": "Node",
+        "moduleResolution": "Node10",
         "module": "ESNext",
         "esModuleInterop": true,
         "outDir": "./bin",
