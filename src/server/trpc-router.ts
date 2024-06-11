@@ -4,7 +4,7 @@
  */
 import { z } from "zod";
 import { initTRPC } from "@trpc/server";
-import { CallGraph } from "../common/data-types";
+import { CallGraph } from "../common/data-types.js";
 
 export type Context = {
     callGraph: CallGraph

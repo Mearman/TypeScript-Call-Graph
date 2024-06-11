@@ -1,6 +1,6 @@
-import { analyzeFiles } from '@/server/logic/analyze';
-import { describe, expect, test } from '@jest/globals';
 import * as path from 'path';
+import { analyzeFiles } from '../src/server/logic/analyze.js';
+import { describe, expect, test } from 'vitest';
 
 describe('analyzeFiles', () => {
     const testCodeDir = path.join(__dirname, 'test-code');

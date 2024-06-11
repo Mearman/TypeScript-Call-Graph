@@ -41,7 +41,8 @@ export type StaticPagesConfig = {
         file: string
     }[],
     srcDir: string,
-    buildDir: string
+    buildDir: string,
+    hmrPort: number
 }
 
 /** Factory function for servers */
@@ -100,12 +101,15 @@ interface RegisterStaticPagesFunction {
 const registerStaticPagesDev: RegisterStaticPagesFunction = async (app, config) => {
     const vite = await createServer({
         server: {
-            middlewareMode: true
+            middlewareMode: true,
+            hmr: {
+                port: config.hmrPort
+            }
         },
         configFile: false,
         appType: 'custom',
         root: config.srcDir,
-        plugins: []
+        plugins: [],
     });
     app.use(vite.middlewares);
 

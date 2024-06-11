@@ -1,4 +1,4 @@
-import { AnalysisResult, Module, ModuleId, ModuleType } from "../../common/data-types";
+import { AnalysisResult, Module, ModuleId, ModuleType } from "../../common/data-types.js";
 import ts from "typescript";
 
 

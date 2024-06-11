@@ -1,17 +1,9 @@
 {
     "compilerOptions": {
         "target": "ESNext",
-        "moduleResolution": "Node10",
-        "module": "ESNext",
-        "esModuleInterop": true,
+        "moduleResolution": "NodeNext",
+        "module": "NodeNext",
         "outDir": "./dist",
-        "baseUrl": ".",
-        "paths": {
-            "@/*": [
-                "src/*",
-                "tests/*"
-            ]
-        },
         /* Linting */
         "strict": true,
         "noUnusedLocals": false,
@@ -23,7 +15,6 @@
         "noImplicitOverride": true,
         "exactOptionalPropertyTypes": true,
         "traceResolution": true,
-        "sourceMap": true
     },
     "include": [
         "src",

@@ -4,7 +4,8 @@
     ],
     "compilerOptions": {
         "moduleResolution": "Bundler",
-        "module": "ESNext"
+        "module": "ESNext",
+        "sourceMap": true
     },
     "include": [
         "**/*",

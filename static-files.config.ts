@@ -1,6 +1,6 @@
-import { StaticPagesConfig } from "./src/server/server-setup-utils";
+import { StaticPagesConfig } from "./src/server/server-setup-utils.js";
 
-export default {
+const config: StaticPagesConfig = {
     'buildDir': 'static/',
     'srcDir': 'src/client/',
     'staticPages': [
@@ -8,5 +8,8 @@ export default {
             'route': '/',
             'file': 'index.html',
         }
-    ]
-} as StaticPagesConfig;
+    ],
+    hmrPort: 3001
+}
+
+export default config;

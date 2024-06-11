@@ -3,12 +3,12 @@ import open from 'open';
 import dotenv from 'dotenv';
 import { globSync } from 'glob';
 
-import { showHelpMessage, showServerRunning } from './helper';
-import { analyzeFiles } from './logic/analyze';
-import { createHybridServer } from './server-setup-utils';
-import staticFilesConfig from '../../static-files.config';
-import { appRouter } from './trpc-router';
-import { AnalysisResult, getGraphFromAnalysisResult } from '../common/data-types';
+import { showHelpMessage, showServerRunning } from './helper.js';
+import { analyzeFiles } from './logic/analyze.js';
+import { createHybridServer } from './server-setup-utils.js';
+import staticFilesConfig from '../../static-files.config.js';
+import { appRouter } from './trpc-router.js';
+import { AnalysisResult, getGraphFromAnalysisResult } from '../common/data-types.js';
 
 
 // Load environment variables from .env file
@@ -50,7 +50,6 @@ async function startServer(analysisResult: AnalysisResult, mode: 'dev' | 'produc
     const server = await createHybridServer(staticFilesConfig, mode);
     server.useTRPCRouter(appRouter, { callGraph });
     server.listen(3000);
-
 
     const filePath: string = 'http://localhost:3000';
     showServerRunning(filePath);

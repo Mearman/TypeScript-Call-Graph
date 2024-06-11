@@ -1,6 +1,6 @@
 import ts from "typescript";
-import { mapToRecord } from "./util";
-import { AppRouter } from "@/server/trpc-router";
+import { mapToRecord } from "./util.js";
+import { AppRouter } from "../server/trpc-router.js";
 
 /** Here, modules represent any of the following units of code:
  * - a file
