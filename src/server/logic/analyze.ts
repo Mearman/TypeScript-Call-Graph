@@ -1,34 +1,11 @@
+import { AnalysisResult, Module, ModuleId, ModuleType } from "../../common/data-types";
 import ts from "typescript";
 
-
-/** Here, modules represent any of the following units of code:
- * - a file
- * - a class
- * - a function (including arrow functions)
- * - a class constructor or method (including getters and setters)
- * 
- * Modules can contain other modules or call other modules.
- */
-export type Module = {
-    id: ModuleId,
-    node: ts.Node,
-    children: Module[],
-    calledModules: ModuleId[],
-    type: ModuleType,
-    name?: string
-}
-export type ModuleType = 'file' | 'fn' | 'class' | 'constructor' | 'getter' | 'setter' | 'method' | 'static';
-export type ModuleId = string & { __moduleId: true };
-export type AnalysisResult = {
-    rootModules: Module[],
-    moduleMap: Map<ModuleId, Module>
-}
 
 let nextModuleId = 1;
 function createModuleId() {
     return (nextModuleId++).toString() as ModuleId;
 }
-
 
 type NamedDeclaration = ts.Declaration & { name?: ts.PropertyName };
 
@@ -47,6 +24,9 @@ function getNamedDeclarationId(node: NamedDeclaration, fileName?: string): Named
     return getNodeId(node, fileName) as NamedDeclarationId;
 }
 
+/** 
+ * Check if the given node is being assigned to
+ */
 function isAssignee(node: ts.Node) {
     while (true) {
         const parent = node.parent;
@@ -63,13 +43,17 @@ function isAssignee(node: ts.Node) {
     }
 }
 
+/**
+ * Analyze the given files to get the call graph data
+ */
 export function analyzeFiles(filenames: string[], tsConfigSrc: string): AnalysisResult {
+
+    // create program & type checker with the given files and tsconfig
     const { config } = ts.parseConfigFileTextToJson(tsConfigSrc, ts.sys.readFile(tsConfigSrc)!);
     const program = ts.createProgram({
         rootNames: filenames,
         options: config
     });
-
     const typeChecker = program.getTypeChecker();
 
     // maps for bookkeeping
@@ -77,9 +61,9 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
     const nodeToModule = new Map<NodeId, Module>();
     const declarationToModule = new Map<NamedDeclarationId, Module>();
     const constructorMap = new Map<ModuleId, Module>(); // class -> constructor
+    const moduleToNode = new Map<ModuleId, ts.Node>();
 
-    // See if the expression is being assigned to a variable, or is a property of an object
-    // Used for arrow functions, etc.
+    /** Find the node that names the given expression, if it exists */
     function getDeclarationFromContext(expression: ts.Node): NamedDeclaration | null {
 
         const parent = expression.parent;
@@ -109,8 +93,10 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
         return null;
     }
 
-    // Follow aliases to get the original symbol
-    // This is necessary for dealing with import/export statements
+    /**
+     * Follow aliases to get the original symbol
+     * This is necessary for dealing with import/export statements
+     */
     function followSymbol(symbol: ts.Symbol) {
         while (symbol.flags & ts.SymbolFlags.Alias) {
             symbol = typeChecker.getAliasedSymbol(symbol);
@@ -118,7 +104,9 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
         return symbol;
     }
 
-    // Generator for a node's declarations
+    /**
+     * Generator for a node's declarations
+     */
     function* getDeclarations(node: ts.Node): Generator<ts.Declaration> {
         const calledSymbol = typeChecker.getSymbolAtLocation(node) || null;
         const originalSymbol = calledSymbol && followSymbol(calledSymbol);
@@ -127,18 +115,15 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
         }
     }
 
-    /** First pass:
-     - create modules for each applicable node
-     - store them in a map
-     - store the declaration node for the module, if it exists
-     - recursively append child modules
-
-     @returns the module for the given node, if it is a module node,
-        or an array of child modules if the node is not a module node
+    /** First pass: recursively visit each node in the AST, and create
+     *  entries in the maps.
+     * 
+     * @returns the module for the given node, if it is a module node,
+     *   or an array of child modules if the node is not a module node
      */
     function visit1(node: ts.Node, fileName: string) {
 
-        // if this node is a module, initialize the module object:
+        // if this node is a module, initialize the module object
         let module: Module | null = null as Module | null;
         function initModule(type: ModuleType, declaration: NamedDeclaration | null, nameOverride?: string) {
             const declarationNameNode = declaration?.name;
@@ -150,16 +135,20 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
                 type,
                 children: [],
                 calledModules: [],
-                node,
                 ... (name && { name })
             }
 
+            // store the module info in the maps
+
             nodeToModule.set(nodeId, module);
             moduleMap.set(moduleId, module);
+            moduleToNode.set(moduleId, node);
+            if (declaration) {
+                const declarationId = getNamedDeclarationId(declaration, fileName);
+                declarationToModule.set(declarationId, module);
+            }
 
-            if (declaration)
-                declarationToModule.set(getNamedDeclarationId(declaration, fileName), module);
-
+            // if this node is a constructor, map the class module to it
             if (type == 'constructor') {
                 if (ts.isClassDeclaration(node.parent)) {
                     const classModule = nodeToModule.get(getNodeId(node.parent, fileName));
@@ -220,8 +209,7 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
     function visit2(node: ts.Node, fileName: string): ModuleId[] {
         const calledModules: ModuleId[] = [];
 
-
-        // if the visited node is a function call, find the module it's calling
+        // calling a function
         if (ts.isCallExpression(node)) {
             for (const declaration of getDeclarations(node.expression)) {
                 let module: Module | null;
@@ -232,7 +220,7 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
             }
         }
 
-        // calling getters and setters
+        // calling a getter or setter
         if (ts.isPropertyAccessExpression(node)) {
             const nodeIsLValue = isAssignee(node);
             for (const declaration of getDeclarations(node.name)) {
@@ -247,7 +235,7 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
             }
         }
 
-        // constructor
+        // calling a constructor
         if (ts.isNewExpression(node)) {
             for (const declaration of getDeclarations(node.expression)) {
                 let classModule: Module | undefined;
@@ -291,7 +279,8 @@ export function analyzeFiles(filenames: string[], tsConfigSrc: string): Analysis
 
     return {
         rootModules,
-        moduleMap
+        moduleMap,
+        nodeMap: moduleToNode
     };
 
 }

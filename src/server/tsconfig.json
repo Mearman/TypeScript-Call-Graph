@@ -1,0 +1,13 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "moduleResolution": "Node10",
+        "module": "ESNext",
+        "target": "ESNext",
+        "paths": {} /* Paths don't work with this project's config for some reason */
+    },
+    "include": [
+        "**/*",
+        "../common/**/*"
+    ]
+}

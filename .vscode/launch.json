@@ -4,7 +4,19 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Call Graph Visualizer",
+            "name": "Launch (Dev)",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch (Prod)",
             "runtimeExecutable": "npm",
             "runtimeArgs": [
                 "run",

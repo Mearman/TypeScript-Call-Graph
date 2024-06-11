@@ -1,4 +1,4 @@
-import { analyzeFiles } from '@/analyze.js';
+import { analyzeFiles } from '@/server/logic/analyze';
 import { describe, expect, test } from '@jest/globals';
 import * as path from 'path';
 
@@ -60,7 +60,7 @@ describe('analyzeFiles', () => {
         ]);
     });
 
-    test('anonymous functions, assignment, and parenthesis', ()=>{
+    test('anonymous functions, assignment, and parenthesis', () => {
         const { rootModules, moduleMap } = analyzeFiles([testFile('05-anonymous.ts')], testFile('tsconfig.json'));
         const file = rootModules[0];
         const x = file.children[0];
@@ -68,6 +68,6 @@ describe('analyzeFiles', () => {
 
         expect(file.calledModules).toContain(x.id);
         expect(file.calledModules).toContain(y.id);
-        
+
     });
 })

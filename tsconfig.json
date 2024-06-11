@@ -1,14 +1,10 @@
 {
-    "exclude": [
-        "node_modules",
-        "static"
-    ],
     "compilerOptions": {
         "target": "ESNext",
         "moduleResolution": "Node10",
         "module": "ESNext",
         "esModuleInterop": true,
-        "outDir": "./bin",
+        "outDir": "./dist",
         "baseUrl": ".",
         "paths": {
             "@/*": [
@@ -27,6 +23,14 @@
         "noImplicitOverride": true,
         "exactOptionalPropertyTypes": true,
         "traceResolution": true,
-        "sourceMap": true,
+        "sourceMap": true
     },
+    "include": [
+        "src",
+        "test"
+    ],
+    "exclude": [
+        "node_modules",
+        "static"
+    ]
 }

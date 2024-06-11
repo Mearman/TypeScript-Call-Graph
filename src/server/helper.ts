@@ -11,7 +11,7 @@ export function showHelpMessage(): void {
     console.log(green('│                           │'));
     console.log(green('╰───────────────────────────╯'));
 
-    console.log('Please specify a TS_CONFIG_PATH and SRC_PATHS environment variable');
+    console.log('Please specify TS_CONFIG_PATH and SRC_PATHS environment variables');
 }
 
 /**

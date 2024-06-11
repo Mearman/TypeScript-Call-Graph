@@ -3,3 +3,4 @@ graphing/temp.png
 package-lock.json
 .env
 static
+dist

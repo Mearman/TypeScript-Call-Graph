@@ -1,0 +1,14 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "moduleResolution": "Node10",
+        "module": "ESNext",
+        "target": "ESNext",
+        "skipLibCheck": true,
+        "sourceMap": false,
+    },
+    "include": [
+        "**/*",
+        "../common/**/*"
+    ],
+}
