@@ -4,6 +4,7 @@
         "moduleResolution": "NodeNext",
         "module": "NodeNext",
         "outDir": "./dist",
+        "sourceMap": true,
         /* Linting */
         "strict": true,
         "noUnusedLocals": false,

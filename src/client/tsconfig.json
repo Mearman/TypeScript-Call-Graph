@@ -3,9 +3,13 @@
         "../../tsconfig.json"
     ],
     "compilerOptions": {
+        "target": "ESNext",
         "moduleResolution": "Bundler",
         "module": "ESNext",
-        "sourceMap": true
+        "sourceMap": true,
+        "lib": [
+            "DOM"
+        ]
     },
     "include": [
         "**/*",
@@ -14,5 +18,5 @@
     "exclude": [
         "../server",
         "node_modules"
-    ]
+    ],
 }

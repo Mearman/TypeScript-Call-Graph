@@ -1,5 +1,6 @@
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
 import { AppRouter } from '../common/data-types';
+import { AppComponent } from './components/AppComponent';
 
 const client = createTRPCProxyClient<AppRouter>({
     links: [
@@ -9,6 +10,11 @@ const client = createTRPCProxyClient<AppRouter>({
     ]
 });
 
+const appRoot = document.getElementById('app')!;
+const appComponent = new AppComponent();
+appRoot.append(appComponent.getElement());
+appComponent.ready();
+
 client.getAnalysisResult.query().then(res => {
-    document.getElementById('app')!.innerHTML = JSON.stringify(res);
+    appComponent.setCallGraph(res);
 });

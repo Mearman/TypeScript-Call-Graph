@@ -1,0 +1,12 @@
+.editBox{
+    display: flex;
+    flex-direction: column;
+    min-width: 220px;
+}
+
+.editBox>textarea{
+    overflow-wrap:normal;
+    overflow-x:auto;
+    white-space:pre;
+
+}
